@@ -1,0 +1,35 @@
+version: '3.8'
+# setting up docker image log rotation 
+x-log: &logging
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "10"
+
+services:
+  vpn:
+    <<: *logging
+    build: 
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        - INSTALL_DEB_PACKAGE=${INSTALL_DEB_PACKAGE}
+    container_name: vipnet
+    # cap_add, security_opt, and volume required for the image to function
+    cap_add:
+      - net_admin
+    env_file:
+      - ./.env
+    tmpfs:
+      - /run
+      - /tmp
+    restart: unless-stopped
+    privileged: true
+    security_opt:
+      - label:disable
+    stdin_open: true
+    tty: true
+    volumes:
+      - /dev/net:/dev/net:z
+      - ./app/key.dst:/vipnet/key.dst
