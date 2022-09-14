@@ -1,3 +1,4 @@
+[![Snyk Container](https://github.com/gseldon/vipnet-client-docker/actions/workflows/snyk-container.yml/badge.svg)](https://github.com/gseldon/vipnet-client-docker/actions/workflows/snyk-container.yml)
 ## ViPNet Client 4 
 _(докер клиент на базе Ubuntu)_
 
