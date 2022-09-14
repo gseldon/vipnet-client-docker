@@ -17,7 +17,14 @@ DNS_SERVER=""
 INSTALL_DEB_PACKAGE="" # если нужна сборка
 ```
 
+### Docker Build
 
+```sh
+docker build \
+-t gseldon/vipnet:test \
+--build-arg INSTALL_DEB_PACKAGE=vipnetclient_gost_ru_amd64_4.12.0-8655.deb \
+--no-cache .
+```
 
 ### Docker-compose ```docker-compose.yml```
 
