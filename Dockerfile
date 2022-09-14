@@ -7,9 +7,11 @@ ENV INSTALL_DEB_PACKAGE=${INSTALL_DEB_PACKAGE}
 ENV DNS_SERVER=${DNS_SERVER:-77.88.8.8}
 ENV DEBUG_LEVEL=${DEBUG_LEVEL:-1}
 ENV KEYFILE_PASS=${KEYFILE_PASS}
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get -o Acquire::Max-FutureTime=86400 update && \
-    apt-get -fy install procps cron curl && \
+    apt-get upgrade -y && \
+    apt-get -fyq install procps cron curl && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /vipnet
