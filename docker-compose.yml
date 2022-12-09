@@ -15,6 +15,8 @@ services:
     # cap_add, security_opt, and volume required for the image to function
     cap_add:
       - net_admin
+    environment:
+      - HEALTHCHECK_CMD=$HEALTHCHECK_CMD
     env_file:
       - ./.env
     tmpfs:
@@ -29,3 +31,8 @@ services:
     volumes:
       - /dev/net:/dev/net:z
       - ./app/key.dst:/vipnet/key.dst
+    healthcheck:
+      test: ${HEALTHCHECK_CMD}
+      interval: 30s
+      timeout: 10s
+      retries: 10

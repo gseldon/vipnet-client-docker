@@ -3,6 +3,7 @@ MAINTAINER https://github.com/gseldon
 ARG INSTALL_DEB_PACKAGE
 
 ENV WEB_HEALTHCHECK=${WEB_HEALTHCHECK}
+ENV HEALTHCHECK_CMD=${HEALTHCHECK_CMD}
 ENV INSTALL_DEB_PACKAGE=${INSTALL_DEB_PACKAGE}
 ENV DNS_SERVER=${DNS_SERVER:-77.88.8.8}
 ENV DEBUG_LEVEL=${DEBUG_LEVEL:-1}
@@ -23,7 +24,7 @@ RUN mkdir -p /vipnet && \
     dpkg -i ${INSTALL_DEB_PACKAGE} && \
     rm -f ${INSTALL_DEB_PACKAGE}
 
-HEALTHCHECK --interval=5s --timeout=15s --retries=3 \
-            CMD curl -o /dev/null -s -w "%{http_code}\n" ${WEB_HEALTHCHECK} || bash -c 'kill -s 15 -1 && (sleep 10; kill -s 9 -1)'
+HEALTHCHECK --interval=5s --timeout=30s --retries=10 \
+    CMD ${HEALTHCHECK_CMD} || bash -c 'kill -s 15 -1 && (sleep 10; kill -s 9 -1)'
 
 CMD ["bash", "/entrypoint.sh"]
