@@ -14,17 +14,16 @@ RUN apt-get -o Acquire::Max-FutureTime=86400 update && \
     apt-get -fyq install procps cron curl && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+COPY ./entrypoint.sh /entrypoint.sh
+
 WORKDIR /vipnet
 COPY ./app/${INSTALL_DEB_PACKAGE} .
-COPY ./entrypoint.sh /vipnet/entrypoint.sh
 
 RUN mkdir -p /vipnet && \
     dpkg -i ${INSTALL_DEB_PACKAGE} && \
     rm -f ${INSTALL_DEB_PACKAGE}
 
-ADD entrypoint.sh .
-
 HEALTHCHECK --interval=5s --timeout=15s --retries=3 \
             CMD curl -o /dev/null -s -w "%{http_code}\n" ${WEB_HEALTHCHECK} || bash -c 'kill -s 15 -1 && (sleep 10; kill -s 9 -1)'
 
-CMD bash /vipnet/entrypoint.sh
+CMD ["/bin/bash", "/entrypoint.sh"]
