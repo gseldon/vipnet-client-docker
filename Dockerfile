@@ -26,4 +26,4 @@ RUN mkdir -p /vipnet && \
 HEALTHCHECK --interval=5s --timeout=15s --retries=3 \
             CMD curl -o /dev/null -s -w "%{http_code}\n" ${WEB_HEALTHCHECK} || bash -c 'kill -s 15 -1 && (sleep 10; kill -s 9 -1)'
 
-CMD ["/bin/bash", "/entrypoint.sh"]
+CMD ["bash", "/entrypoint.sh"]
