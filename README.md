@@ -13,10 +13,20 @@ _(докер клиент на базе Ubuntu)_
 ```sh
 KEYFILE_PASS=""
 WEB_HEALTHCHECK=""
+HEALTHCHECK_CMD=""
 DNS_SERVER=""
 INSTALL_DEB_PACKAGE="" # если нужна сборка
 ```
+Варианты ```HEALTHCHECK_CMD```
+```
+# проверка через пинг
+ping -c 4 ${WEB_HEALTHCHECK}'
+```
 
+```
+# проверка через web
+curl -o /dev/null -s -w "%{http_code}\n" ${WEB_HEALTHCHECK}'
+```
 ### Docker Build
 
 ```sh

@@ -18,5 +18,5 @@ echo -e "\e[93mПроверка подключения\e[39m"
 vipnetclient debug --ping
 echo -e "\e[93mВключаем лог\e[39m"
 vipnetclient debug --loglevel $DEBUG_LEVEL
-tail -f /vipnet/var/log/vipnetclient.log
+tail -f /vipnet/var/log/*.log
 exec "$@"
