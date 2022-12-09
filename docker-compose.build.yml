@@ -1,0 +1,11 @@
+version: '3.8'
+# setting up docker image log rotation 
+services:
+  vpn:
+    <<: *logging
+    build: 
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        - INSTALL_DEB_PACKAGE=${INSTALL_DEB_PACKAGE}
+    image: gseldon/vipnetclient
