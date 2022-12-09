@@ -10,11 +10,7 @@ x-log: &logging
 services:
   vpn:
     <<: *logging
-    build: 
-      context: .
-      dockerfile: ./Dockerfile
-      args:
-        - INSTALL_DEB_PACKAGE=${INSTALL_DEB_PACKAGE}
+    image: gseldon/vipnetclient
     container_name: vipnet
     # cap_add, security_opt, and volume required for the image to function
     cap_add:
