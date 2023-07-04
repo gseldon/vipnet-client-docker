@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:22.10
 MAINTAINER https://github.com/gseldon
 ARG INSTALL_DEB_PACKAGE
 
