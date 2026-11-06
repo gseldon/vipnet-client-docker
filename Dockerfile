@@ -1,11 +1,11 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 ARG INSTALL_DEB_PACKAGE
 ARG DEBIAN_FRONTEND=noninteractive
 
 LABEL org.opencontainers.image.authors="https://github.com/gseldon" \
       org.opencontainers.image.source="https://github.com/gseldon/vipnet-client-docker" \
-      org.opencontainers.image.title="ViPNet Client 4"
+      org.opencontainers.image.title="ViPNet Client 5"
 
 # Max-FutureTime: обход ошибки при сбитых часах (например, в WSL)
 # .deb монтируется на время сборки и не попадает в слой образа

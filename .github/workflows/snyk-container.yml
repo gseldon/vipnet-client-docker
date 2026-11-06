@@ -34,7 +34,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build a Docker image
-      run: docker build -t gseldon/vipnet:test --build-arg INSTALL_DEB_PACKAGE=vipnetclient_gost_ru_amd64_4.12.0-8655.deb .
+      run: docker build -t gseldon/vipnet:test --build-arg INSTALL_DEB_PACKAGE=vipnetclient_gost_amd64_5.1.4-8917.deb .
     - name: Run Snyk to check Docker image for vulnerabilities
       # Snyk can be used to break the build when it detects vulnerabilities.
       # In this case we want to upload the issues to GitHub Code Scanning
