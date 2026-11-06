@@ -1,5 +1,4 @@
-version: '3.8'
-# setting up docker image log rotation 
+# Ротация логов docker
 x-log: &logging
   logging:
     driver: "json-file"
@@ -10,29 +9,23 @@ x-log: &logging
 services:
   vpn:
     <<: *logging
-    image: gseldon/vipnetclient
+    image: gseldon/vipnetclient:latest
     container_name: vipnet
-    # cap_add, security_opt, and volume required for the image to function
+    # ViPNet не запускается без privileged (проверено: с одним NET_ADMIN
+    # vipnetclient падает с "Operation not permitted")
+    privileged: true
     cap_add:
-      - net_admin
-    environment:
-      - HEALTHCHECK_CMD=$HEALTHCHECK_CMD
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
     env_file:
       - ./.env
     tmpfs:
       - /run
       - /tmp
     restart: unless-stopped
-    privileged: true
     security_opt:
       - label:disable
-    stdin_open: true
-    tty: true
     volumes:
-      - /dev/net:/dev/net:z
-      - ./app/key.dst:/vipnet/key.dst
-    healthcheck:
-      test: ${HEALTHCHECK_CMD}
-      interval: 30s
-      timeout: 10s
-      retries: 10
+      - ./app/key.dst:/vipnet/key.dst:ro
+    # healthcheck берётся из образа (/healthcheck.sh, использует HEALTHCHECK_CMD)

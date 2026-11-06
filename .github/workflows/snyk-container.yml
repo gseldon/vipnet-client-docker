@@ -32,9 +32,9 @@ jobs:
       security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Build a Docker image
-      run: docker build -t gseldon/vipnet:test --build-arg INSTALL_DEB_PACKAGE=vipnetclient_gost_ru_amd64_4.12.0-8655.deb --no-cache .
+      run: docker build -t gseldon/vipnet:test --build-arg INSTALL_DEB_PACKAGE=vipnetclient_gost_ru_amd64_4.12.0-8655.deb .
     - name: Run Snyk to check Docker image for vulnerabilities
       # Snyk can be used to break the build when it detects vulnerabilities.
       # In this case we want to upload the issues to GitHub Code Scanning
@@ -49,6 +49,6 @@ jobs:
         image: gseldon/vipnet:test
         args: --file=Dockerfile
     - name: Upload result to GitHub Code Scanning
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: snyk.sarif

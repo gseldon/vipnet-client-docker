@@ -1,30 +1,24 @@
 FROM ubuntu:22.04
-MAINTAINER https://github.com/gseldon
+
 ARG INSTALL_DEB_PACKAGE
+ARG DEBIAN_FRONTEND=noninteractive
 
-ENV WEB_HEALTHCHECK=${WEB_HEALTHCHECK}
-ENV HEALTHCHECK_CMD=${HEALTHCHECK_CMD}
-ENV INSTALL_DEB_PACKAGE=${INSTALL_DEB_PACKAGE}
-ENV DNS_SERVER=${DNS_SERVER:-77.88.8.8}
-ENV DEBUG_LEVEL=${DEBUG_LEVEL:-1}
-ENV KEYFILE_PASS=${KEYFILE_PASS}
-ENV DEBIAN_FRONTEND=noninteractive
+LABEL org.opencontainers.image.authors="https://github.com/gseldon" \
+      org.opencontainers.image.source="https://github.com/gseldon/vipnet-client-docker" \
+      org.opencontainers.image.title="ViPNet Client 4"
 
-RUN apt-get -o Acquire::Max-FutureTime=86400 update && \
-    apt-get upgrade -y && \
-    apt-get -fyq install procps cron curl && \
+# Max-FutureTime: обход ошибки при сбитых часах (например, в WSL)
+# .deb монтируется на время сборки и не попадает в слой образа
+RUN --mount=type=bind,source=app,target=/tmp/app \
+    apt-get -o Acquire::Max-FutureTime=86400 update && \
+    apt-get install -y --no-install-recommends \
+        procps curl ca-certificates iputils-ping \
+        "/tmp/app/${INSTALL_DEB_PACKAGE}" && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-COPY ./entrypoint.sh /entrypoint.sh
-
 WORKDIR /vipnet
-COPY ./app/${INSTALL_DEB_PACKAGE} .
+COPY --chmod=755 entrypoint.sh healthcheck.sh /
 
-RUN mkdir -p /vipnet && \
-    dpkg -i ${INSTALL_DEB_PACKAGE} && \
-    rm -f ${INSTALL_DEB_PACKAGE}
+HEALTHCHECK --interval=30s --timeout=30s --retries=3 CMD ["/healthcheck.sh"]
 
-HEALTHCHECK --interval=5s --timeout=30s --retries=10 \
-    CMD ${HEALTHCHECK_CMD} || bash -c 'kill -s 15 -1 && (sleep 10; kill -s 9 -1)'
-
-CMD ["bash", "/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]

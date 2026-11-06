@@ -1,2 +1,5 @@
 *.dst
 *.env
+.claude/
+VipNet_data/
+app/*.deb

@@ -1,74 +1,169 @@
 [![Snyk Container](https://github.com/gseldon/vipnet-client-docker/actions/workflows/snyk-container.yml/badge.svg)](https://github.com/gseldon/vipnet-client-docker/actions/workflows/snyk-container.yml)
-## ViPNet Client 4 
-_(докер клиент на базе Ubuntu)_
 
-### Подготовка к сборке образа.
+## ViPNet Client 4
+_(Docker-клиент на базе Ubuntu 22.04)_
 
-Скачать дистрибутив с сайта [infotecs.ru](https://infotecs.ru/downloads/all/vipnet-client-4u.html) для версии Linux x64 и положить его в папку app
+Контейнер поднимает ViPNet Client 4 для Linux, подключает файл ключей `key.dst` и отдаёт сетевой стек другим контейнерам через `network_mode: "service:vpn"`.
 
-Подготовить файл 
+> ⚠️ Подробности об используемом дистрибутиве, назначении проекта и отказе от ответственности — в разделе [Сноски и отказ от ответственности](#сноски-и-отказ-от-ответственности)<sup>[1](#сноска-1)</sup>.
 
-Подготовить файл переменных ```.env```
+### Содержание
+
+- [Подготовка](#подготовка)
+- [Переменные окружения](#переменные-окружения)
+- [Запуск через docker-compose](#запуск-через-docker-compose)
+- [Сборка образа](#сборка-образа)
+- [Healthcheck](#healthcheck)
+- [Структура проекта](#структура-проекта)
+- [Безопасность](#безопасность)
+- [Сноски и отказ от ответственности](#сноски-и-отказ-от-ответственности)
+
+### Подготовка
+
+1. Скачать дистрибутив **ViPNet Client 4 для Linux (x64, deb)** с официального сайта [infotecs.ru](https://infotecs.ru/downloads/all/vipnet-client-4u.html) и положить `.deb` в папку `app/`<sup>[1](#сноска-1)</sup>.
+2. Положить свой файл ключей в `app/key.dst` (в репозиторий он не попадает — см. `.gitignore`)<sup>[3](#сноска-3)</sup>.
+3. Создать файл переменных окружения:
+
+```sh
+cp .env.example .env
+```
+
+### Переменные окружения
+
+| Переменная | Описание | По умолчанию |
+|---|---|---|
+| `KEYFILE_PASS` | Пароль к файлу ключей (**обязательна**) | — |
+| `HEALTHCHECK_CMD` | Команда проверки работоспособности; пусто = проверка отключена | — |
+| `DNS_SERVER` | DNS-сервер, прописываемый в `trusted` в `/etc/vipnet.conf` | `77.88.8.8` |
+| `DEBUG_LEVEL` | Уровень логирования ViPNet (`vipnetclient debug --loglevel`) | `1` |
+| `INSTALL_DEB_PACKAGE` | Имя `.deb` из `app/`; нужна **только при сборке** образа | — |
+
+Пример `.env`:
 
 ```sh
 KEYFILE_PASS=""
-WEB_HEALTHCHECK=""
-HEALTHCHECK_CMD=""
-DNS_SERVER=""
-INSTALL_DEB_PACKAGE="" # если нужна сборка
-```
-Варианты ```HEALTHCHECK_CMD```
-```
-# проверка через пинг
-ping -c 4 ${WEB_HEALTHCHECK}'
+HEALTHCHECK_CMD="curl -fsS -m 10 -o /dev/null http://intranet.example.local"
+DNS_SERVER="77.88.8.8"
+DEBUG_LEVEL="1"
+INSTALL_DEB_PACKAGE="vipnetclient_gost_ru_amd64_4.12.0-8655.deb"
 ```
 
+### Запуск через docker-compose
+
+Готовый образ (`docker-compose.yml`):
+
+```sh
+docker compose up -d
 ```
-# проверка через web
-curl -o /dev/null -s -w "%{http_code}\n" ${WEB_HEALTHCHECK}'
+
+```yaml
+services:
+  vpn:
+    image: gseldon/vipnetclient:latest
+    container_name: vipnet
+    privileged: true          # без privileged vipnetclient падает с "Operation not permitted"
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    env_file:
+      - ./.env
+    tmpfs:
+      - /run
+      - /tmp
+    restart: unless-stopped
+    security_opt:
+      - label:disable
+    volumes:
+      - ./app/key.dst:/vipnet/key.dst:ro
 ```
-### Docker Build
+
+Пример подключения другого контейнера к VPN-сети:
+
+```yaml
+  service:
+    image: ubuntu
+    depends_on:
+      vpn:
+        condition: service_healthy
+    network_mode: "service:vpn"
+    restart: unless-stopped
+```
+
+Логи ротируются (`json-file`, 10 МБ × 10 файлов).
+
+### Сборка образа
+
+Через compose (использует `INSTALL_DEB_PACKAGE` из `.env`):
+
+```sh
+docker compose -f docker-compose.yml -f docker-compose.build.yml build
+```
+
+Или напрямую:
 
 ```sh
 docker build \
--t gseldon/vipnet:test \
---build-arg INSTALL_DEB_PACKAGE=vipnetclient_gost_ru_amd64_4.12.0-8655.deb \
---no-cache .
+  -t gseldon/vipnet:test \
+  --build-arg INSTALL_DEB_PACKAGE=vipnetclient_gost_ru_amd64_4.12.0-8655.deb \
+  --no-cache .
 ```
 
-### Docker-compose ```docker-compose.yml```
+`.deb` монтируется в сборку через `RUN --mount=type=bind` и **не попадает в слои образа**.
 
-```docker
-version: '3.8'
+### Healthcheck
 
-services:
-    vpn:
-        image: gseldon/vipnetclient:latest
-        container_name: vipnet
-        cap_add:
-            - net_admin
-        env_file:
-            - ./.env
-        tmpfs:
-            - /run
-            - /tmp
-        restart: unless-stopped
-        privileged: true
-        security_opt:
-            - label:disable
-        stdin_open: true
-        tty: true
-        volumes:
-            - /dev/net:/dev/net:z
-            - ./app/key.dst:/vipnet/key.dst
-    service:
-        image: ubuntu
-        depends_on: 
-        vpn:
-            condition: service_healthy
-        network_mode: "service:vpn"
-        restart: unless-stopped
+Образ содержит `HEALTHCHECK`, который запускает `/healthcheck.sh` (интервал 30 с, 3 попытки):
+
+- `HEALTHCHECK_CMD` пустой — проверка отключена, контейнер всегда `healthy`;
+- команда завершилась с ошибкой — отправляется `SIGTERM` процессу PID 1, контейнер останавливается и перезапускается политикой `restart`.
+
+Примеры `HEALTHCHECK_CMD`:
+
+```sh
+# проверка через ping
+ping -c 4 intranet.example.local
+
+# проверка через web
+curl -fsS -m 10 -o /dev/null http://intranet.example.local
 ```
 
+### Структура проекта
+
+```
+.
+├── Dockerfile               # образ на ubuntu:22.04
+├── entrypoint.sh            # установка ключей, запуск, вывод логов, корректная остановка
+├── healthcheck.sh           # проверка по HEALTHCHECK_CMD
+├── docker-compose.yml       # запуск готового образа
+├── docker-compose.build.yml # сборка образа локально
+├── .env.example             # шаблон переменных окружения
+└── app/                     # сюда кладутся .deb и key.dst (не коммитятся)
+```
+
+### Безопасность
+
+- Контейнер требует `privileged: true` — запускайте его только на доверенных хостах.
+- Файл ключей `key.dst` и `.env` с паролем **не должны попадать в git и в образ**; ключ монтируется только на чтение (`:ro`) во время работы.
+- Образ сканируется на уязвимости через Snyk Container (см. бейдж выше).
 
 [Main Project](https://github.com/gseldon/vipnet-client)
+
+---
+
+## Сноски и отказ от ответственности
+
+<a id="сноска-1"></a>
+**[1] Источник дистрибутива.** Пакет `.deb` (ViPNet Client 4 для Linux) **в репозитории не распространяется**. Он загружается пользователем самостоятельно с официального сайта разработчика — [infotecs.ru](https://infotecs.ru/downloads/all/vipnet-client-4u.html). Права на ViPNet, ViPNet Client и сопутствующие материалы принадлежат АО «ИнфоТеКС». Названия и товарные знаки используются исключительно для указания совместимости.
+
+<a id="сноска-2"></a>
+**[2] Назначение и отсутствие претензий.** Проект создан и поддерживается **для личного использования** как удобная обёртка (Dockerfile и скрипты запуска) вокруг официального клиента. Он **не является официальным продуктом** АО «ИнфоТеКС», не связан с компанией, не одобрен и не поддерживается ею. Автор не имеет намерения нарушать чьи-либо права и не предъявляет претензий к правообладателям; при обращении правообладателя материалы будут оперативно изменены или удалены.
+
+<a id="сноска-3"></a>
+**[3] Ключи и конфиденциальные данные.** Файлы ключей (`key.dst`), пароли и содержимое `.env` — конфиденциальная информация пользователя. Они не входят в репозиторий и образ, их хранение, передача и защита — зона ответственности пользователя в соответствии с политикой информационной безопасности его организации.
+
+<a id="сноска-4"></a>
+**[4] Область применения и ответственность.** ViPNet — средство защиты информации. Использовать данный проект следует только в рамках применимого законодательства (в том числе требований к СКЗИ и защите информации) и внутренних регламентов организации. Привилегированный режим контейнера и вынос сетевого стека ViPNet в Docker могут не соответствовать требованиям вашей организации или регулятора — это необходимо проверять самостоятельно.
+
+<a id="сноска-5"></a>
+**[5] Отсутствие гарантий.** Проект предоставляется «как есть» (*as is*), без каких-либо гарантий, явных или подразумеваемых, включая пригодность для конкретных целей. Автор не несёт ответственности за любой прямой или косвенный ущерб, потерю данных, нарушение работы сети или безопасности, возникшие в результате использования проекта. Для промышленной эксплуатации используйте решения и рекомендации, предоставленные вендором. Лицензия на код проекта — см. файл [LICENSE](LICENSE); она **не распространяется** на дистрибутив ViPNet, лицензионные условия которого определяются АО «ИнфоТеКС».
