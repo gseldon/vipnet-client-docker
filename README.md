@@ -1,7 +1,5 @@
-[![Snyk Container](https://github.com/gseldon/vipnet-client-docker/actions/workflows/snyk-container.yml/badge.svg)](https://github.com/gseldon/vipnet-client-docker/actions/workflows/snyk-container.yml)
-
 ## ViPNet Client 5
-_(Docker-клиент на базе Ubuntu 22.04)_
+_(Docker-клиент на базе Ubuntu 24.04)_
 
 Контейнер поднимает ViPNet Client 5 для Linux, подключает файл ключей `key.dst` и отдаёт сетевой стек другим контейнерам через `network_mode: "service:vpn"`.
 
@@ -132,7 +130,7 @@ curl -fsS -m 10 -o /dev/null http://intranet.example.local
 
 ```
 .
-├── Dockerfile               # образ на ubuntu:22.04
+├── Dockerfile               # образ на ubuntu:24.04
 ├── entrypoint.sh            # установка ключей, запуск, вывод логов, корректная остановка
 ├── healthcheck.sh           # проверка по HEALTHCHECK_CMD
 ├── docker-compose.yml       # запуск готового образа
@@ -145,7 +143,6 @@ curl -fsS -m 10 -o /dev/null http://intranet.example.local
 
 - Контейнер требует `privileged: true` — запускайте его только на доверенных хостах.
 - Файл ключей `key.dst` и `.env` с паролем **не должны попадать в git и в образ**; ключ монтируется только на чтение (`:ro`) во время работы.
-- Образ сканируется на уязвимости через Snyk Container (см. бейдж выше).
 
 [Main Project](https://github.com/gseldon/vipnet-client)
 
