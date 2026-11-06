@@ -1,9 +1,9 @@
 [![Snyk Container](https://github.com/gseldon/vipnet-client-docker/actions/workflows/snyk-container.yml/badge.svg)](https://github.com/gseldon/vipnet-client-docker/actions/workflows/snyk-container.yml)
 
-## ViPNet Client 4
+## ViPNet Client 5
 _(Docker-клиент на базе Ubuntu 22.04)_
 
-Контейнер поднимает ViPNet Client 4 для Linux, подключает файл ключей `key.dst` и отдаёт сетевой стек другим контейнерам через `network_mode: "service:vpn"`.
+Контейнер поднимает ViPNet Client 5 для Linux, подключает файл ключей `key.dst` и отдаёт сетевой стек другим контейнерам через `network_mode: "service:vpn"`.
 
 > ⚠️ Подробности об используемом дистрибутиве, назначении проекта и отказе от ответственности — в разделе [Сноски и отказ от ответственности](#сноски-и-отказ-от-ответственности)<sup>[1](#сноска-1)</sup>.
 
@@ -20,7 +20,7 @@ _(Docker-клиент на базе Ubuntu 22.04)_
 
 ### Подготовка
 
-1. Скачать дистрибутив **ViPNet Client 4 для Linux (x64, deb)** с официального сайта [infotecs.ru](https://infotecs.ru/downloads/all/vipnet-client-4u.html) и положить `.deb` в папку `app/`<sup>[1](#сноска-1)</sup>.
+1. Скачать дистрибутив **ViPNet Client 5 для Linux (x64, deb)** с официального сайта [infotecs.ru](https://infotecs.ru/downloads/all/vipnet-client-4u.html) и положить `.deb` в папку `app/`<sup>[1](#сноска-1)</sup>.
 2. Положить свой файл ключей в `app/key.dst` (в репозиторий он не попадает — см. `.gitignore`)<sup>[3](#сноска-3)</sup>.
 3. Создать файл переменных окружения:
 
@@ -45,7 +45,7 @@ KEYFILE_PASS=""
 HEALTHCHECK_CMD="curl -fsS -m 10 -o /dev/null http://intranet.example.local"
 DNS_SERVER="77.88.8.8"
 DEBUG_LEVEL="1"
-INSTALL_DEB_PACKAGE="vipnetclient_gost_ru_amd64_4.12.0-8655.deb"
+INSTALL_DEB_PACKAGE="vipnetclient_gost_amd64_5.1.4-8917.deb"
 ```
 
 ### Запуск через docker-compose
@@ -105,7 +105,7 @@ docker compose -f docker-compose.yml -f docker-compose.build.yml build
 ```sh
 docker build \
   -t gseldon/vipnet:test \
-  --build-arg INSTALL_DEB_PACKAGE=vipnetclient_gost_ru_amd64_4.12.0-8655.deb \
+  --build-arg INSTALL_DEB_PACKAGE=vipnetclient_gost_amd64_5.1.4-8917.deb \
   --no-cache .
 ```
 
@@ -154,7 +154,7 @@ curl -fsS -m 10 -o /dev/null http://intranet.example.local
 ## Сноски и отказ от ответственности
 
 <a id="сноска-1"></a>
-**[1] Источник дистрибутива.** Пакет `.deb` (ViPNet Client 4 для Linux) **в репозитории не распространяется**. Он загружается пользователем самостоятельно с официального сайта разработчика — [infotecs.ru](https://infotecs.ru/downloads/all/vipnet-client-4u.html). Права на ViPNet, ViPNet Client и сопутствующие материалы принадлежат АО «ИнфоТеКС». Названия и товарные знаки используются исключительно для указания совместимости.
+**[1] Источник дистрибутива.** Пакет `.deb` (ViPNet Client 5 для Linux) **в репозитории не распространяется**. Он загружается пользователем самостоятельно с официального сайта разработчика — [infotecs.ru](https://infotecs.ru/downloads/all/vipnet-client-4u.html). Права на ViPNet, ViPNet Client и сопутствующие материалы принадлежат АО «ИнфоТеКС». Названия и товарные знаки используются исключительно для указания совместимости.
 
 <a id="сноска-2"></a>
 **[2] Назначение и отсутствие претензий.** Проект создан и поддерживается **для личного использования** как удобная обёртка (Dockerfile и скрипты запуска) вокруг официального клиента. Он **не является официальным продуктом** АО «ИнфоТеКС», не связан с компанией, не одобрен и не поддерживается ею. Автор не имеет намерения нарушать чьи-либо права и не предъявляет претензий к правообладателям; при обращении правообладателя материалы будут оперативно изменены или удалены.
